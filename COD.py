@@ -73,66 +73,83 @@ def audio_callback(indata, outdata, frames, time, status): #Este apelată automa
         out = reverb_out
 
     outdata[:, 0] = out    #semnalul final este trimis spre iesire
-
-# Funcții GUI
+    
+# Definire funcție care actualizează valoarea delay-ului în milisecunde, luată din slider
 def update_delay(val):
-    params['delay_ms'] = int(float(val))
+    params['delay_ms'] = int(float(val))  # Convertim valoarea de tip string în float, apoi în intreg și o salvăm
 
+# Definire funcție care actualizează procentul de feedback (semnal recirculat în delay)
 def update_feedback(val):
-    params['feedback'] = int(float(val))
+    params['feedback'] = int(float(val))  # Convertim valoarea și o salvăm în parametrii
 
+# Definire funcție care actualizează raportul mix între semnal procesat și semnal original
 def update_mix(val):
-    params['mix'] = int(float(val))
+    params['mix'] = int(float(val))  # Convertim și salvăm valoarea în parametrii
 
+# Funcție pentru pornirea/oprirea streamului audio
 def toggle_stream():
-    global audio_stream, toggle_btn
-    if audio_stream is None:
+    global audio_stream, toggle_btn  # Accesăm variabilele globale
+
+    if audio_stream is None:  # Dacă microfonul nu este pornit
+        # Creăm un stream audio cu un callback pentru procesarea sunetului
         audio_stream = sd.Stream(callback=audio_callback,
-                                 channels=1,
-                                 samplerate=sample_rate,
-                                 blocksize=blocksize)
-        audio_stream.start()
-        toggle_btn.config(text="PORNESTE MICROFON")
+                                 channels=1,                # Mono (1 canal audio)
+                                 samplerate=sample_rate,    # Frecvență de eșantionare
+                                 blocksize=blocksize)       # Dimensiunea blocului de date
+        audio_stream.start()  # Pornim streamul audio
+        toggle_btn.config(text="PORNESTE MICROFON")  # Actualizăm textul butonului
     else:
-        audio_stream.stop()
-        audio_stream.close()
-        audio_stream = None
-        toggle_btn.config(text="PORNESTE MICROFON")
+        audio_stream.stop()   # Oprim streamul
+        audio_stream.close()  # Eliberăm resursele
+        audio_stream = None   # Resetăm variabila
+        toggle_btn.config(text="PORNESTE MICROFON")  # Resetăm textul butonului
 
+# Funcție pentru activarea/dezactivarea efectului de reverb
 def toggle_reverb():
-    params['reverb_on'] = not params['reverb_on']
-    reverb_btn.config(text=f"Reverb: {'ON' if params['reverb_on'] else 'OFF'}")
+    params['reverb_on'] = not params['reverb_on']  # Inversăm starea curentă a reverb-ului
+    reverb_btn.config(text=f"Reverb: {'ON' if params['reverb_on'] else 'OFF'}")  # Actualizăm textul butonului
 
+# Funcție pentru activarea/dezactivarea efectului de delay
 def toggle_delay():
-    params['delay_on'] = not params['delay_on']
-    delay_btn.config(text=f"Delay: {'ON' if params['delay_on'] else 'OFF'}")
+    params['delay_on'] = not params['delay_on']  # Inversăm starea delay-ului
+    delay_btn.config(text=f"Delay: {'ON' if params['delay_on'] else 'OFF'}")  # Actualizăm textul butonului
 
-# Interfață
+# ---------------------- INTERFAȚĂ GRAFICĂ CU TKINTER ----------------------
+
+# Creăm fereastra principală a aplicației
 root = tk.Tk()
-root.title("PROIECT EFECTE AUDIO")
+root.title("PROIECT EFECTE AUDIO")  # Setăm titlul ferestrei
 
-ttk.Label(root, text="Delay Time (ms)").pack()
-delay_slider = ttk.Scale(root, from_=50, to=1000, orient='horizontal', command=update_delay)
-delay_slider.set(params['delay_ms'])
-delay_slider.pack()
+# ---------- SLIDER Delay ----------
+ttk.Label(root, text="Delay Time (ms)").pack()  # Etichetă pentru sliderul de delay
+delay_slider = ttk.Scale(root, from_=50, to=1000, orient='horizontal', command=update_delay)  # Slider delay între 50–1000 ms
+delay_slider.set(params['delay_ms'])  # Setăm valoarea inițială
+delay_slider.pack()  # Afișăm sliderul
 
-ttk.Label(root, text="Feedback (%)").pack()
-feedback_slider = ttk.Scale(root, from_=0, to=95, orient='horizontal', command=update_feedback)
-feedback_slider.set(params['feedback'])
-feedback_slider.pack()
+# ---------- SLIDER Feedback ----------
+ttk.Label(root, text="Feedback (%)").pack()  # Etichetă pentru sliderul de feedback
+feedback_slider = ttk.Scale(root, from_=0, to=95, orient='horizontal', command=update_feedback)  # Slider feedback 0–95%
+feedback_slider.set(params['feedback'])  # Setăm valoarea inițială
+feedback_slider.pack()  # Afișăm sliderul
 
-ttk.Label(root, text="Mix (%)").pack()
-mix_slider = ttk.Scale(root, from_=0, to=100, orient='horizontal', command=update_mix)
-mix_slider.set(params['mix'])
-mix_slider.pack()
+# ---------- SLIDER Mix ----------
+ttk.Label(root, text="Mix (%)").pack()  # Etichetă pentru sliderul de mix
+mix_slider = ttk.Scale(root, from_=0, to=100, orient='horizontal', command=update_mix)  # Slider mix 0–100%
+mix_slider.set(params['mix'])  # Setăm valoarea inițială
+mix_slider.pack()  # Afișăm sliderul
 
-delay_btn = ttk.Button(root, text="Delay: OFF", command=toggle_delay)
-delay_btn.pack(pady=5)
+# ---------- Buton pentru activare/dezactivare delay ----------
+delay_btn = ttk.Button(root, text="Delay: OFF", command=toggle_delay)  # Buton delay
+delay_btn.pack(pady=5)  # Afișăm butonul cu un spațiu vertical
 
-reverb_btn = ttk.Button(root, text="Reverb: OFF", command=toggle_reverb)
-reverb_btn.pack(pady=5)
+# ---------- Buton pentru activare/dezactivare reverb ----------
+reverb_btn = ttk.Button(root, text="Reverb: OFF", command=toggle_reverb)  # Buton reverb
+reverb_btn.pack(pady=5)  # Afișăm butonul cu un spațiu vertical
 
-toggle_btn = ttk.Button(root, text="PORNESTE MICROFON", command=toggle_stream)
-toggle_btn.pack(pady=10)
+# ---------- Buton pentru pornire/oprire microfon ----------
+toggle_btn = ttk.Button(root, text="PORNESTE MICROFON", command=toggle_stream)  # Buton microfon
+toggle_btn.pack(pady=10)  # Afișăm cu spațiu mai mare
 
+# Pornește bucla principală a aplicației grafice — așteaptă interacțiuni
 root.mainloop()
+
