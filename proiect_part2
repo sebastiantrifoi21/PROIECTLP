@@ -1,0 +1,30 @@
+# Delay effect
+    if params['delay_on']:
+        delay_samples = int((params['delay_ms'] / 1000) * sample_rate)
+        feedback = params['feedback'] / 100
+        mix = params['mix'] / 100
+
+        delay_out = np.zeros_like(dry)
+        for i in range(frames):
+            read_index = (write_index - delay_samples + max_delay_samples) % max_delay_samples
+            delayed_sample = delay_buffer[read_index]
+            current_sample = dry[i] + delayed_sample * feedback
+            delay_buffer[write_index] = current_sample
+            write_index = (write_index + 1) % max_delay_samples
+            delay_out[i] = dry[i] * (1 - mix) + delayed_sample * mix
+
+        out = delay_out
+
+    # Reverb effect
+    if params['reverb_on']:
+        reverb_out = np.copy(out)
+        for b, idx, delay_len in zip(reverb_buffers, reverb_indices, reverb_delays):
+            for i in range(frames):
+                delayed_sample = b[idx]
+                b[idx] = 0.7 * reverb_out[i] + 0.3 * delayed_sample
+                reverb_out[i] += delayed_sample * 0.3
+                idx = (idx + 1) % delay_len
+            reverb_indices[reverb_delays.index(delay_len)] = idx
+        out = reverb_out
+
+    outdata[:, 0] = out
