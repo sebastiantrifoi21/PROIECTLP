@@ -38,11 +38,11 @@ def audio_callback(indata, outdata, frames, time, status): #Este apelată automa
     out = np.copy(dry)
 
     # Delay effect
-    if params['delay_on']:
-        delay_samples = int((params['delay_ms'] / 1000) * sample_rate)
+    if params['delay_on']:    #verifica daca efectul este activat (butonul de on/off din interfata)
+        delay_samples = int((params['delay_ms'] / 1000) * sample_rate)    #convertim timpul de delay din secunde in esantioane
         feedback = params['feedback'] / 100
         mix = params['mix'] / 100
-
+        
         delay_out = np.zeros_like(dry)
         for i in range(frames):
             read_index = (write_index - delay_samples + max_delay_samples) % max_delay_samples
